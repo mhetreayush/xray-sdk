@@ -11,46 +11,24 @@ Observability and tracing system with SDK, Core API, and Frontend.
 
 ## Quick Start
 
-### 1. Start Infrastructure
+### 1. Installations
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [pnpm](https://pnpm.io/installation)
+
+### 2. Start Infrastructure
 
 ```bash
-docker-compose up -d
+pnpm dev
 ```
 
-This starts MongoDB and Kafka locally.
-
-### 2. Create Kafka Topic
-
-```bash
-docker exec xray-kafka kafka-topics --create \
-  --topic xray-events \
-  --bootstrap-server localhost:9092 \
-  --partitions 3 \
-  --replication-factor 1
-```
-
-### 3. Install Dependencies
-
-```bash
-pnpm install
-```
-
-### 4. Setup Core API
-
-See [apps/core-api/README.md](apps/core-api/README.md) for detailed setup instructions.
-
-### 5. Run Example App
-
-See [apps/example-app/README.md](apps/example-app/README.md) for instructions.
-
-## Development
-
-This is a pnpm workspace monorepo. To work on a specific package:
-
-```bash
-cd apps/core-api  # or packages/xray-sdk, etc.
-pnpm dev          # Start development mode
-```
+- This will start:
+  - MongoDB on port 27017
+  - Kafka on port 9092
+  - Zookeeper (required for Kafka) on port 2181
+  - Core API on port 3000
+  - Frontend on port 3001
+  - Example App on port 3002
 
 ## PRDs given to coding agent
 
