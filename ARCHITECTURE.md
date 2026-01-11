@@ -192,6 +192,20 @@ The backend service provides:
 
 ![Architecture Diagram](./docs/assets/architecture-diagram.png)
 
+#### Real World Application
+
+- I was building a system where the spreadsheet context would go to an LLM and it would understand the structure of the spreadsheet and the data in it, and it would be able to answer questions about the data.
+- But, due to some reasons, the context was not being passed to the LLM, the LLM used to still do the job, but it was not very good.
+- If I had this system, I would have seen in the trace that the input context is empty, and I would have been able to debug the system and fix the issue.
+
+#### What Next??
+
+- Give a way to configure where data blobs are stored and how to access them
+- Stress test the system to ensure it can handle large volumes of data
+- Improve the query API to support more complex queries
+- Add an llm to querying system so the user can ask questions about the data
+- I would gather some knowledge about components like Clickhouse, and other message queues to see if we can use them to improve the system
+
 ## Data Flow
 
 ### Event Flow (Traces, Steps)
