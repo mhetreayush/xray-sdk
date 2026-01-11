@@ -3,10 +3,10 @@
   "ui": "tui",
   "tasks": {
     "setup-dev": {
-      "cache": false
+      "cache": true
     },
     "dev": {
-      "cache": false,
+      "cache": true,
       "persistent": true,
       "dependsOn": ["setup-dev"]
     }
