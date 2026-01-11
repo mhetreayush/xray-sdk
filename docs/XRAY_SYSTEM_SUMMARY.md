@@ -1,0 +1,173 @@
+# X-Ray System Summary
+
+## SDK (`packages/sdk`)
+
+### Components
+
+| Component | Responsibility |
+|-----------|----------------|
+| BaseTracer | Entry point. Accepts config. Creates storage, worker pool, uploaders. Exposes createTrace(). |
+| Trace | Instance per pipeline run. Holds traceId, stepNumber counter. Exposes dataId(), step(), error(), success(), failure(), capture(). |
+| StorageAdapter | Interface for write/read/delete/list operations. |
+| DiskStorage | Writes to tempDir. Tracks size in memory. FIFO deletes when limit hit. Scans on startup. |
+| MemoryStorage | Fallback when disk unwritable. In-memory Map. FIFO deletes when limit hit. |
+| WorkerPool | Pool of worker threads. Serializes objects to JSON buffer. Prevents main thread blocking. |
+| BatchQueue | Queues events. Flushes on interval OR maxSize. Starts/stops interval based on activity. |
+| DataUploader | Handles data blob uploads. Serializes via worker pool. Writes to storage. Gets presigned URL. Uploads to S3. Retries with backoff. |
+| EventUploader | Handles step/trace events. Uses BatchQueue. Writes batch to storage. Sends to ingest endpoint. Retries with backoff. |
+| ApiClient | HTTP calls to backend (presign, ingest). |
+
+### Data Flow
+
+**dataId() call:**
+```
+data → WorkerPool (serialize) → Storage (write) → ApiClient (presign) → S3 (upload) → Storage (delete)
+```
+
+**step()/error()/success()/failure() call:**
+```
+event → BatchQueue → Storage (write batch) → ApiClient (ingest) → Storage (delete)
+```
+
+### Configuration
+
+| Field | Default |
+|-------|---------|
+| apiKey | required |
+| projectId | required |
+| enabled | true |
+| debug | false |
+| baseUrl | localhost:3000 |
+| tempDir | auto-detect |
+| maxDiskSize | 500MB |
+| maxMemorySize | 50MB |
+| batchInterval | 1000ms |
+| maxBatchSize | 50 |
+| workerPoolSize | 2 |
+
+---
+
+## Core API (`apps/core-api`)
+
+### Services
+
+| Service | Responsibility |
+|---------|----------------|
+| Presigned URL Service | Issues S3 presigned URLs. Queues data metadata to Kafka. |
+| Ingestion API | Receives event batches. Pushes to Kafka. Returns ACK immediately. |
+| Kafka Consumer | Pulls from Kafka. Bulk writes to MongoDB. Handles duplicates via unique index. |
+| Query API | Serves frontend. Fetches traces, steps, data. Issues presigned URLs for data download. |
+| Auth Service | Validates API keys (SDK). Validates JWT + project membership (frontend). |
+
+### API Endpoints
+
+**SDK Endpoints (API Key Auth)**
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| /api/v1/presign | POST | Get S3 presigned URL for data upload |
+| /api/v1/ingest | POST | Receive batch of events |
+
+**Query Endpoints (User Auth)**
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| /api/v1/projects | GET | List user's projects |
+| /api/v1/projects/:projectId/traces | GET | List traces for project |
+| /api/v1/traces/:traceId | GET | Get trace with all steps |
+| /api/v1/traces/:traceId/data/:dataId | GET | Get presigned URL for data download |
+| /api/v1/projects/:projectId/query | POST | Query steps with filters |
+
+**Auth Endpoints**
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| /api/v1/auth/register | POST | Create user |
+| /api/v1/auth/login | POST | Get JWT |
+| /api/v1/projects | POST | Create project |
+| /api/v1/projects/:projectId/keys | POST | Create API key |
+| /api/v1/projects/:projectId/keys | GET | List API keys |
+| /api/v1/projects/:projectId/members | POST | Add member |
+
+### Data Flow
+
+**Ingestion:**
+```
+SDK → Ingestion API → Kafka → Consumer → MongoDB
+SDK → Presigned URL Service → S3 (data blob)
+                            → Kafka → Consumer → MongoDB (data metadata)
+```
+
+**Query:**
+```
+Frontend → Query API → MongoDB → Response
+Frontend → Query API → S3 (presigned URL) → Frontend downloads data
+```
+
+### Kafka
+
+| Setting | Value |
+|---------|-------|
+| Topic | xray-events |
+| Partitioning | Round-robin (no key) |
+| Partitions | 3-6 (scale as needed) |
+| Consumer Group | xray-consumers |
+
+### MongoDB Collections
+
+| Collection | Purpose | Unique Index |
+|------------|---------|--------------|
+| users | User accounts | email |
+| projects | Workspaces | - |
+| projectMembers | User-project mapping | projectId + userId |
+| apiKeys | SDK authentication | key |
+| traces | Trace documents | traceId |
+| steps | Step documents | stepId |
+| data | Data blob metadata | dataId |
+
+### Consumer Behavior
+
+- Pulls batches of 1000 messages
+- Traces: upsert (for success/failure updates)
+- Steps/Data: bulk insert with ordered:false
+- Duplicate key errors ignored (handles reprocessing)
+- Delay between batches to protect MongoDB
+
+---
+
+## Infrastructure
+
+| Component | Technology |
+|-----------|------------|
+| SDK | TypeScript, Node.js |
+| Core API | TypeScript, Node.js, Express/Fastify |
+| Queue | Kafka |
+| Database | MongoDB |
+| Blob Storage | S3 |
+| Auth | JWT (users), API Key (SDK) |
+
+---
+
+## ID Formats
+
+| ID | Format | Generated By |
+|----|--------|--------------|
+| traceId | {projectId}-{uuid} | SDK |
+| stepId | {uuid} | SDK |
+| dataId | {uuid} | SDK |
+| projectId | MongoDB ObjectId | Backend |
+| userId | MongoDB ObjectId | Backend |
+
+---
+
+## Security
+
+**SDK Requests:**
+- API key in header (x-api-key)
+- Key lookup returns projectId
+- SDK can only write to its own project
+
+**Frontend Requests:**
+- JWT in header
+- Middleware checks projectMembers collection
+- User can only access projects they belong to

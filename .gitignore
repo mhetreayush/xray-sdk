@@ -1,0 +1,16 @@
+node_modules
+dist
+*.log
+.DS_Store
+.env
+.env.local
+.pnpm-store
+
+# turbo
+.turbo
+
+# frontend
+.next
+
+# core-api
+dist
