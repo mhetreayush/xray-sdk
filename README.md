@@ -41,3 +41,32 @@ pnpm dev
 - [SDK PRD](docs/PRDs/sdk-prd.md)
 - [Core API PRD](docs/PRDs/core-api-prd.md)
 - [System Summary](docs/XRAY_SYSTEM_SUMMARY.md)
+
+## Updating the api keys:
+
+- Access the frontend at `http://localhost:3001`
+
+# Steps:
+
+1. Register:
+
+- Go to `http://localhost:3001/register`
+
+2. Create a project:
+
+- Click "Create Project"
+- Fill in the project name
+- Click "Create Project"
+
+3. Create an API key:
+
+- Go to project
+- Click "Settings"
+- Click "+ Create API Key"
+- Copy the API Key
+
+4. Use the API key in the example-app SDK configuration:
+
+- open `apps/example-app/src/tracer.ts`
+- update the API key and project ID
+- the example-app will restart on itself
