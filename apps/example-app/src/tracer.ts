@@ -2,8 +2,8 @@ import { BaseTracer } from "@xray/sdk";
 
 // Default tracer configuration
 const defaultConfig = {
-  apiKey: "xray_sk_t7CsWCA9zeHM315WzlSntCEjnWJVonb8",
-  projectId: "004f4d69-9f89-46b9-b954-c1738cd7e8ad",
+  apiKey: "xray_sk_N8yYPZuaQSvGomV34Rc0Lax4Yl048zW3",
+  projectId: "611f8714-c116-4828-8bd7-03162cd4d4ce",
   enabled: true,
   debug: true,
   baseUrl: process.env.XRAY_BASE_URL || "http://localhost:3000",

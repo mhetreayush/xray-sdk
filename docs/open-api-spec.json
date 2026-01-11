@@ -1,0 +1,514 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "xray-dev",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "register",
+        "responses": {
+          "200": {
+            "description": "register",
+            "headers": {
+              "X-Powered-By": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Express"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "http://localhost:3001"
+              },
+              "Vary": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Origin"
+              },
+              "Access-Control-Allow-Credentials": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "example": "true"
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": "275"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "W/\"113-B6WChpMj0c7cEpNVp6uAHAaoSp0\""
+              },
+              "Date": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Sun, 11 Jan 2026 16:49:13 GMT"
+              },
+              "Connection": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "Keep-Alive": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "timeout=5"
+              }
+            }
+          }
+        },
+        "description": "Generated from cURL: curl -X POST http://localhost:3000/api/v1/auth/register \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"name\": \"Test User\"\n  }'",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "email": "test@example.com",
+                "password": "password123",
+                "name": "Test User"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects": {
+      "post": {
+        "summary": "Create project",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Bearer {{xrayToken}}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Create project",
+            "headers": {
+              "X-Powered-By": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Express"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "http://localhost:3001"
+              },
+              "Vary": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Origin"
+              },
+              "Access-Control-Allow-Credentials": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "example": "true"
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": "209"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "W/\"d1-gs7VFBJE1YiCK+c+PqwAd/1vFso\""
+              },
+              "Date": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Sun, 11 Jan 2026 16:54:53 GMT"
+              },
+              "Connection": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "Keep-Alive": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "timeout=5"
+              }
+            }
+          }
+        },
+        "description": "Generated from cURL: curl -X POST http://localhost:3000/api/v1/projects \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer YOUR_TOKEN\" \\\n  -d '{\n    \"name\": \"My Project\"\n  }'",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "name": "My Project final"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/keys": {
+      "post": {
+        "summary": "Create API Key",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Bearer {{xrayToken}}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Create API Key",
+            "headers": {
+              "X-Powered-By": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Express"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "http://localhost:3001"
+              },
+              "Vary": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Origin"
+              },
+              "Access-Control-Allow-Credentials": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "example": "true"
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": "118"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "W/\"76-nM+fp+KAfaeFKSmcARshsmircN4\""
+              },
+              "Date": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Sun, 11 Jan 2026 16:55:24 GMT"
+              },
+              "Connection": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "Keep-Alive": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "timeout=5"
+              }
+            }
+          }
+        },
+        "description": "Generated from cURL: curl -X POST http://localhost:3000/api/v1/projects/PROJECT_ID/keys \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer YOUR_TOKEN\" \\\n  -d '{\n    \"name\": \"Example App Key\"\n  }'",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "name": "Example App Key"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "{{projectId}}"
+        }
+      ]
+    },
+    "/api/v1/projects/{projectId}/schemas": {
+      "get": {
+        "summary": "Get metadata schema",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "deprecated": false,
+            "schema": {},
+            "example": "Bearer {{xrayToken}}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get metadata schema",
+            "headers": {
+              "X-Powered-By": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Express"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "http://localhost:3001"
+              },
+              "Vary": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Origin"
+              },
+              "Access-Control-Allow-Credentials": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "example": "true"
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": "362"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "W/\"16a-P3etrXmyL5QE+ZdX2e9D34fJ+xo\""
+              },
+              "Date": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Sun, 11 Jan 2026 16:55:26 GMT"
+              },
+              "Connection": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "Keep-Alive": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "timeout=5"
+              }
+            }
+          }
+        },
+        "description": "Generated from cURL: curl -X GET \"http://localhost:3000/api/v1/projects/YOUR_PROJECT_ID/schemas\" \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\""
+      },
+      "parameters": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "{{projectId}}"
+        }
+      ]
+    },
+    "/api/v1/projects/{projectId}/query": {
+      "post": {
+        "summary": "Test query",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "Bearer {{xrayToken}}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test query",
+            "headers": {
+              "X-Powered-By": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Express"
+              },
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "http://localhost:3001"
+              },
+              "Vary": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Origin"
+              },
+              "Access-Control-Allow-Credentials": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "example": "true"
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": "599"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "W/\"257-yDAL/BA8DtXS9A+6W+n0Rkb/vXg\""
+              },
+              "Date": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Sun, 11 Jan 2026 16:56:27 GMT"
+              },
+              "Connection": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "Keep-Alive": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "timeout=5"
+              }
+            }
+          }
+        },
+        "description": "Generated from cURL: curl -X POST \"http://localhost:3000/api/v1/projects/a3df9244-7cd2-491a-b266-8a99d1a5abb8/query\" \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"filter\": {\n      \"metadata.testObject.testNestedObject.name\": \"Ayush\"\n    }\n  }'",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "properties": {
+                      "metadata.keywordCount": {
+                        "type": "object",
+                        "properties": {
+                          "$gt": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "filter": {
+                  "metadata.keywordCount": {
+                    "$gt": 3
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "projectId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "{{projectId}}"
+        }
+      ]
+    }
+  }
+}

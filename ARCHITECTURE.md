@@ -225,3 +225,391 @@ The backend service provides:
 ## Monitoring & Observability
 
 - **Debug Mode**: SDK logs all operations when enabled
+
+### Data Model Design
+
+#### Traces
+
+# Schema
+
+```json
+{
+  traceId: string;
+  projectId: string;
+  metadata: Record<string, unknown>;
+  status: "success" | "failure" | "pending";
+  successMetadata: Record<string, unknown>;
+  failureMetadata: Record<string, unknown>;
+  createdAt: Date;
+  endedAt: Date;
+}
+```
+
+- `traceId`: Unique identifier for the trace
+- `projectId`: Identifier for the project
+- `metadata`: Metadata for the trace
+- `status`: Status of the trace
+- `successMetadata`: Metadata for the successful trace
+- `failureMetadata`: Metadata for the failed trace
+- `createdAt`: Timestamp when the trace was created
+- `endedAt`: Timestamp when the trace was ended
+
+# Philosophy
+
+- Trace can have metadata like useCase, it will make it possible to query traces by useCase.
+- Traces will be scoped by projectId, and will be used to store traces for a specific project.
+- status is optionally set by the user, this will determine if that run was a success or failure.
+- Optionally, the user can set successMetadata and failureMetadata to store additional metadata for the trace.
+
+#### Steps
+
+# Schema
+
+```json
+{
+  stepId: string;
+  traceId: string;
+  projectId: string;
+  type: "step" | "step-error" | "trace-error";
+  stepName: string;
+  stepNumber: number;
+  artifacts: Array<{ dataId: string; type: "input" | "output" | null }>;
+  metadata: Record<string, unknown>;
+  timestamp: Date;
+}
+```
+
+- `stepId`: Unique identifier for the step
+- `traceId`: Identifier for the trace
+- `projectId`: Identifier for the project
+- `type`: Type of the step
+- `stepName`: Name of the step
+- `stepNumber`: Number of the step
+- `artifacts`: Artifacts for the step
+- `metadata`: Metadata for the step
+- `timestamp`: Timestamp when the step was created
+
+# Philosophy
+
+- `projectId` is duplicated in the steps because this system is an append-only system, so we can have some degree of duplication, and duplicating the projectId in the steps will help us to query the steps by projectId without having to join the traces collection.
+- `type` is used to differentiate between step, step-error, and trace-error.
+- `stepName` is the name of the step, it will be used to identify the step in the UI.
+- `stepNumber` is the number of the step, it will be used to identify the step in the UI.
+- `artifacts` is an array of artifacts for the step, it will be used to store the artifacts for the step.
+- `metadata` is the metadata for the step, it will be used to store the metadata for the step.
+
+#### Data
+
+# Schema
+
+```json
+{
+  dataId: string;
+  traceId: string;
+  key: string;
+  metadata: Record<string, unknown>;
+  dataPath: string;
+}
+```
+
+# Philosophy
+
+- `dataId`: Unique identifier for the data
+- `traceId`: Identifier for the trace
+- `key`: Key for the data
+- `metadata`: Metadata for the data
+- `dataPath`: Path to the data in S3
+
+# Metadata Schema
+
+```json
+{
+  projectId: string;
+  stepName: string;
+  schemaHash: string;
+  schemaShape: Record<string, unknown>;
+  lastSeenAt: Date;
+}
+```
+
+- `projectId`: Identifier for the project
+- `stepName`: Name of the step
+- `schemaHash`: Hash of the schema shape
+- `schemaShape`: Schema shape
+- `lastSeenAt`: Timestamp when the schema was last seen
+
+# Philosophy
+
+- `projectId` is duplicated in the metadata schema because this system is an append-only system, so we can have some degree of duplication, and duplicating the projectId in the metadata schema will help us to query the metadata schema by projectId without having to join the steps collection.
+- `stepName` is the name of the step, it will be used to identify the step in the UI.
+- `schemaHash` is the hash of the schema shape, it will be used to identify the schema shape. This is used to prevent duplicate schema shapes from being stored.
+- `schemaShape` is the schema shape, it will be used to store the schema shape.
+
+### Endpoints, Request and Response
+
+#### POST /api/v1/auth/register
+
+**Purpose:** Register a new user account
+
+**Authentication:** None required
+
+**Request Body:**
+
+```json
+{
+  "email": "string (email format)",
+  "password": "string",
+  "name": "string"
+}
+```
+
+**Response:** 200 OK
+
+```json
+{
+  "user": {
+    "id": "6963d488208b19fda2c2d21d",
+    "email": "test@example.com",
+    "name": "Test User"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTYzZDQ4ODIwOGIxOWZkYTJjMmQyMWQiLCJpYXQiOjE3NjgxNTAxNTMsImV4cCI6MTc2ODc1NDk1M30.QfXNaSgNOV9bj_rbZ1VDnEnVeLROyE8COamm4UXhKsE"
+}
+```
+
+---
+
+#### POST /api/v1/projects
+
+**Purpose:** Create a new project
+
+**Authentication:** JWT Bearer token (Authorization header)
+
+**Request Body:**
+
+```json
+{
+  "name": "string"
+}
+```
+
+**Response:** 200 OK
+
+```json
+{
+  "project": {
+    "projectId": "611f8714-c116-4828-8bd7-03162cd4d4ce",
+    "name": "My Project final",
+    "_id": "6963d5dd208b19fda2c2d269",
+    "createdAt": "2026-01-11T16:54:53.243Z",
+    "updatedAt": "2026-01-11T16:54:53.243Z",
+    "__v": 0
+  }
+}
+```
+
+---
+
+#### POST /api/v1/projects/{projectId}/keys
+
+**Purpose:** Create an API key for a project
+
+**Authentication:** JWT Bearer token (Authorization header)
+
+**Path Parameters:**
+
+- `projectId` (string, required): The ID of the project
+
+**Request Body:**
+
+```json
+{
+  "name": "Example App Key"
+}
+```
+
+**Response:** 200 OK
+
+```json
+{
+  "apiKey": {
+    "id": "6963d488208b19fda2c2d21d",
+    "key": "xray_sk_1234567890",
+    "name": "Example App Key"
+  }
+}
+```
+
+---
+
+#### GET /api/v1/projects/{projectId}/schemas
+
+**Purpose:** Get metadata schema for a project
+
+**Authentication:** JWT Bearer token (Authorization header)
+
+**Path Parameters:**
+
+- `projectId` (string, required): The ID of the project
+
+**Response:** 200 OK
+
+```json
+{
+  "schema": {
+    "keywordCount": "number",
+    "candidateCount": "number",
+    "filterConfig": {
+      "priceRange": {
+        "min": "number",
+        "max": "number"
+      },
+      "minRating": "number",
+      "minReviews": "number",
+      "categoryMatch": "string"
+    },
+    "inputCount": "number",
+    "outputCount": "number",
+    "filteredCount": "number",
+    "filteredPercentage": "string",
+    "rankedCount": "number",
+    "selectedId": "string",
+    "selectedTitle": "string"
+  }
+}
+```
+
+---
+
+#### POST /api/v1/projects/{projectId}/query
+
+**Purpose:** Query steps with filters
+
+**Authentication:** JWT Bearer token (Authorization header)
+
+**Path Parameters:**
+
+- `projectId` (string, required): The ID of the project
+
+**Request Body:**
+
+```json
+{
+  "filter": {
+    "metadata.keywordCount": {
+      "$gt": "integer"
+    }
+  }
+}
+```
+
+**Request:**
+
+```json
+{
+  "results": [
+    {
+      "_id": "6963d5fa208b19fda2c2d292",
+      "stepId": "6b457392-8dee-4cee-a12a-e1f0dee1929b",
+      "traceId": "611f8714-c116-4828-8bd7-03162cd4d4ce-2dfbfe0e-d7f1-4f9d-a6ae-b0d82ecc3f18",
+      "projectId": "611f8714-c116-4828-8bd7-03162cd4d4ce",
+      "type": "step",
+      "stepName": "generate_keywords",
+      "stepNumber": 1,
+      "artifacts": [
+        {
+          "dataId": "522a2253-0a45-41c0-b256-a944834047a5",
+          "type": "input",
+          "_id": "6963d5fa208b19fda2c2d293"
+        },
+        {
+          "dataId": "eb8778d8-9609-4bec-b845-8c44f18fe2ce",
+          "type": "output",
+          "_id": "6963d5fa208b19fda2c2d294"
+        }
+      ],
+      "metadata": {
+        "keywordCount": 5
+      },
+      "timestamp": "2026-01-11T16:55:21.013Z",
+      "__v": 0
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+**Note:** The filter supports nested metadata paths (e.g., `metadata.testObject.testNestedObject.name`) and MongoDB-style operators (e.g., `$gt`, `$lt`, `$eq`).
+
+**Response:** 200 OK
+
+- Query results matching the specified filters
+
+---
+
+#### POST /api/v1/ingest
+
+**Purpose:** Receive batch of events from SDK and push to Kafka for async processing
+
+**Authentication:** API Key (x-api-key header)
+
+**Request Body:**
+
+```json
+{
+  "events": [
+    {
+      "type": "trace-start" | "trace-success" | "trace-failure" | "step" | "step-error" | "trace-error" | "data",
+      // ... event-specific fields
+    }
+  ]
+}
+```
+
+**Event Types:**
+
+- `trace-start`: Trace creation event
+- `trace-success`: Trace completion with success status
+- `trace-failure`: Trace completion with failure status
+- `step`: Step execution event
+- `step-error`: Step error event
+- `trace-error`: Trace error event
+- `data`: Data metadata event
+
+**Example Request:**
+
+```json
+{
+  "events": [
+    {
+      "type": "trace-start",
+      "traceId": "trace-123",
+      "metadata": { "key": "value" },
+      "createdAt": 1234567890
+    },
+    {
+      "type": "step",
+      "stepId": "step-456",
+      "traceId": "trace-123",
+      "stepName": "process-data",
+      "stepNumber": 1,
+      "metadata": { "processed": true },
+      "timestamp": 1234567891
+    }
+  ]
+}
+```
+
+**Response:** 200 OK
+
+```json
+{
+  "success": true
+}
+```
+
+**Note:**
+
+- Events are pushed to Kafka topic (`xray-events`) asynchronously
+- The API returns immediately without waiting for consumer processing
+- `projectId` is automatically added to all events server-side (extracted from API key)
+- Events are processed by Kafka consumer and written to MongoDB

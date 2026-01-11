@@ -114,11 +114,6 @@ export async function competitorDiscovery(product: {
       metadata: {
         selectedId: bestMatch.id,
         selectedTitle: bestMatch.title,
-        testObject: {
-          testNestedObject: {
-            name: "Ayush",
-          },
-        },
       },
     });
 

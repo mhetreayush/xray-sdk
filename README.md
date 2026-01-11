@@ -16,7 +16,13 @@ Observability and tracing system with SDK, Core API, and Frontend.
 - [Docker](https://docs.docker.com/get-docker/)
 - [pnpm](https://pnpm.io/installation)
 
-### 2. Start Infrastructure
+### Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Start Infrastructure & Services
 
 ```bash
 pnpm dev
