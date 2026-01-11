@@ -4,6 +4,135 @@
 
 The X-Ray system is a distributed observability platform that collects, stores, and queries trace data from instrumented applications. The architecture is designed for high throughput, reliability, and scalability, with client-side batching and storage to ensure data durability and efficient network usage.
 
+## Data Model Rationale
+
+### Philosophy
+
+- This SDK is meant to be a general purpose SDK for any application, which could have infinite use cases.
+- Given that, the debugging data would mean different things for different use cases.
+- Fitting every step of the workflow into categories like "filtering", "sorting", "grouping", "aggregating", "transforming", "etc." would be too restrictive, and developers would need to spend more time thinking of what category to use for each step.
+- Instead, we allow the developer to capture the data as they see fit, and then query the data later using the metadata.
+- Hence, metadata is the key to the system.
+
+### Traces
+
+#### Schema
+
+```json
+{
+  traceId: string;
+  projectId: string;
+  metadata: Record<string, unknown>;
+  status: "success" | "failure" | "pending";
+  successMetadata: Record<string, unknown>;
+  failureMetadata: Record<string, unknown>;
+  createdAt: Date;
+  endedAt: Date;
+}
+```
+
+- `traceId`: Unique identifier for the trace
+- `projectId`: Identifier for the project
+- `metadata`: Metadata for the trace
+- `status`: Status of the trace
+- `successMetadata`: Metadata for the successful trace
+- `failureMetadata`: Metadata for the failed trace
+- `createdAt`: Timestamp when the trace was created
+- `endedAt`: Timestamp when the trace was ended
+
+#### Philosophy
+
+- Trace can have metadata like useCase, it will make it possible to query traces by useCase.
+- Traces will be scoped by projectId, and will be used to store traces for a specific project.
+- status is optionally set by the user, this will determine if that run was a success or failure.
+- Optionally, the user can set successMetadata and failureMetadata to store additional metadata for the trace.
+
+### Steps
+
+#### Schema
+
+```json
+{
+  stepId: string;
+  traceId: string;
+  projectId: string;
+  type: "step" | "step-error" | "trace-error";
+  stepName: string;
+  stepNumber: number;
+  artifacts: Array<{ dataId: string; type: "input" | "output" | null }>;
+  metadata: Record<string, unknown>;
+  timestamp: Date;
+}
+```
+
+- `stepId`: Unique identifier for the step
+- `traceId`: Identifier for the trace
+- `projectId`: Identifier for the project
+- `type`: Type of the step
+- `stepName`: Name of the step
+- `stepNumber`: Number of the step
+- `artifacts`: Artifacts for the step
+- `metadata`: Metadata for the step
+- `timestamp`: Timestamp when the step was created
+
+#### Philosophy
+
+- `projectId` is duplicated in the steps because this system is an append-only system, so we can have some degree of duplication, and duplicating the projectId in the steps will help us to query the steps by projectId without having to join the traces collection.
+- `type` is used to differentiate between step, step-error, and trace-error.
+- `stepName` is the name of the step, it will be used to identify the step in the UI.
+- `stepNumber` is the number of the step, it will be used to identify the step in the UI.
+- `artifacts` is an array of artifacts for the step, it will be used to store the artifacts for the step.
+- `metadata` is the metadata for the step, it will be used to store the metadata for the step.
+
+### Data
+
+#### Schema
+
+```json
+{
+  dataId: string;
+  traceId: string;
+  key: string;
+  metadata: Record<string, unknown>;
+  dataPath: string;
+}
+```
+
+#### Philosophy
+
+- `dataId`: Unique identifier for the data
+- `traceId`: Identifier for the trace
+- `key`: Key for the data
+- `metadata`: Metadata for the data
+- `dataPath`: Path to the data in S3
+
+### Metadata Schema
+
+#### Schema
+
+```json
+{
+  projectId: string;
+  stepName: string;
+  schemaHash: string;
+  schemaShape: Record<string, unknown>;
+  lastSeenAt: Date;
+}
+```
+
+- `projectId`: Identifier for the project
+- `stepName`: Name of the step
+- `schemaHash`: Hash of the schema shape
+- `schemaShape`: Schema shape
+- `lastSeenAt`: Timestamp when the schema was last seen
+
+#### Philosophy
+
+- `projectId` is duplicated in the metadata schema because this system is an append-only system, so we can have some degree of duplication, and duplicating the projectId in the metadata schema will help us to query the metadata schema by projectId without having to join the steps collection.
+- `stepName` is the name of the step, it will be used to identify the step in the UI.
+- `schemaHash` is the hash of the schema shape, it will be used to identify the schema shape. This is used to prevent duplicate schema shapes from being stored.
+- `schemaShape` is the schema shape, it will be used to store the schema shape.
+
 ## System Components
 
 ### 1. Client SDK (`packages/xray-sdk`)
@@ -222,128 +351,9 @@ The backend service provides:
 - Exponential backoff retries (max 5 attempts)
 - Failed uploads persist in local storage
 
-## Monitoring & Observability
+### Debugging
 
 - **Debug Mode**: SDK logs all operations when enabled
-
-### Data Model Design
-
-#### Traces
-
-# Schema
-
-```json
-{
-  traceId: string;
-  projectId: string;
-  metadata: Record<string, unknown>;
-  status: "success" | "failure" | "pending";
-  successMetadata: Record<string, unknown>;
-  failureMetadata: Record<string, unknown>;
-  createdAt: Date;
-  endedAt: Date;
-}
-```
-
-- `traceId`: Unique identifier for the trace
-- `projectId`: Identifier for the project
-- `metadata`: Metadata for the trace
-- `status`: Status of the trace
-- `successMetadata`: Metadata for the successful trace
-- `failureMetadata`: Metadata for the failed trace
-- `createdAt`: Timestamp when the trace was created
-- `endedAt`: Timestamp when the trace was ended
-
-# Philosophy
-
-- Trace can have metadata like useCase, it will make it possible to query traces by useCase.
-- Traces will be scoped by projectId, and will be used to store traces for a specific project.
-- status is optionally set by the user, this will determine if that run was a success or failure.
-- Optionally, the user can set successMetadata and failureMetadata to store additional metadata for the trace.
-
-#### Steps
-
-# Schema
-
-```json
-{
-  stepId: string;
-  traceId: string;
-  projectId: string;
-  type: "step" | "step-error" | "trace-error";
-  stepName: string;
-  stepNumber: number;
-  artifacts: Array<{ dataId: string; type: "input" | "output" | null }>;
-  metadata: Record<string, unknown>;
-  timestamp: Date;
-}
-```
-
-- `stepId`: Unique identifier for the step
-- `traceId`: Identifier for the trace
-- `projectId`: Identifier for the project
-- `type`: Type of the step
-- `stepName`: Name of the step
-- `stepNumber`: Number of the step
-- `artifacts`: Artifacts for the step
-- `metadata`: Metadata for the step
-- `timestamp`: Timestamp when the step was created
-
-# Philosophy
-
-- `projectId` is duplicated in the steps because this system is an append-only system, so we can have some degree of duplication, and duplicating the projectId in the steps will help us to query the steps by projectId without having to join the traces collection.
-- `type` is used to differentiate between step, step-error, and trace-error.
-- `stepName` is the name of the step, it will be used to identify the step in the UI.
-- `stepNumber` is the number of the step, it will be used to identify the step in the UI.
-- `artifacts` is an array of artifacts for the step, it will be used to store the artifacts for the step.
-- `metadata` is the metadata for the step, it will be used to store the metadata for the step.
-
-#### Data
-
-# Schema
-
-```json
-{
-  dataId: string;
-  traceId: string;
-  key: string;
-  metadata: Record<string, unknown>;
-  dataPath: string;
-}
-```
-
-# Philosophy
-
-- `dataId`: Unique identifier for the data
-- `traceId`: Identifier for the trace
-- `key`: Key for the data
-- `metadata`: Metadata for the data
-- `dataPath`: Path to the data in S3
-
-# Metadata Schema
-
-```json
-{
-  projectId: string;
-  stepName: string;
-  schemaHash: string;
-  schemaShape: Record<string, unknown>;
-  lastSeenAt: Date;
-}
-```
-
-- `projectId`: Identifier for the project
-- `stepName`: Name of the step
-- `schemaHash`: Hash of the schema shape
-- `schemaShape`: Schema shape
-- `lastSeenAt`: Timestamp when the schema was last seen
-
-# Philosophy
-
-- `projectId` is duplicated in the metadata schema because this system is an append-only system, so we can have some degree of duplication, and duplicating the projectId in the metadata schema will help us to query the metadata schema by projectId without having to join the steps collection.
-- `stepName` is the name of the step, it will be used to identify the step in the UI.
-- `schemaHash` is the hash of the schema shape, it will be used to identify the schema shape. This is used to prevent duplicate schema shapes from being stored.
-- `schemaShape` is the schema shape, it will be used to store the schema shape.
 
 ### Endpoints, Request and Response
 
