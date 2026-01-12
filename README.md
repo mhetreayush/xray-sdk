@@ -24,7 +24,7 @@ pnpm install
 
 ### 3. Populate core-api env
 
-- Please add the .env file sent to Rishabh in apps/core-api/.env
+- Please add the .env file sent to Rishabh over email in apps/core-api/.env
 
 ### 4. Start Infrastructure & Services
 
